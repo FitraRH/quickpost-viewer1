@@ -7,7 +7,7 @@ const Navbar = () => {
         <Link to="/" className="flex items-center space-x-3">
           {/* Icon image */}
           <img
-            src="https://th.bing.com/th/id/OIP.GoBZFLEJeoEVEgGtAD5dJAHaHp?r=0&rs=1&pid=ImgDetMain"
+            src="https://i.pinimg.com/originals/0f/9f/fb/0f9ffb500ee2b0398b78ef52faad6648.jpg"
             alt="Icon"
             className="w-10 h-10 object-cover rounded-full"
           />
