@@ -15,7 +15,6 @@ const Home = () => {
         </Link>
         <Link to="/create">
           <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition">
-            Create Post
           </button>
         </Link>
       </div>

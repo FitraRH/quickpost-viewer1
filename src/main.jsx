@@ -1,14 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
-import './index.css'; // Optional: Tailwind or your own CSS
-import { BrowserRouter } from 'react-router-dom'; // Wrap app with router
+import { BrowserRouter as Router } from 'react-router-dom';
+import App from './App.jsx';
+import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* Wrap everything in BrowserRouter so routing works */}
-    <BrowserRouter>
+    <Router>
       <App />
-    </BrowserRouter>
+    </Router>
   </React.StrictMode>
 );

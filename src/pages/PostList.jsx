@@ -1,93 +1,134 @@
-// src/pages/PostList.jsx
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import { Link, useNavigate } from 'react-router-dom';
+import Navbar from '../components/navbar';
 
 const PostList = () => {
-  // State to store the posts data that will be displayed (limited to first 20)
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
-  
-  // State to store unique user IDs extracted from all posts data
-  const [users, setUsers] = useState([]);
+  const [filteredPosts, setFilteredPosts] = useState([]);
+  const [emails, setEmails] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [postsPerPage] = useState(5);
 
-  // Effect hook to fetch posts data when component mounts
   useEffect(() => {
-    // Fetch all posts from JSONPlaceholder API
-    fetch('https://jsonplaceholder.typicode.com/posts')
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = () => {
+    fetch('http://localhost:3000/posts')
       .then(res => res.json())
       .then(data => {
-        // Only display first 20 posts for better performance and UX
-        setPosts(data.slice(0, 20));
-        
-        // Extract unique user IDs from ALL posts data (not just the first 20)
-        // This ensures we show all users even if their posts aren't in the first 20
-        const uniqueUserIds = Array.from(new Set(data.map(post => post.userId)));
-        setUsers(uniqueUserIds);
-      });
-  }, []); // Empty dependency array means this runs once on component mount
+        setPosts(data);
+        setFilteredPosts(data);
+        const uniqueEmails = Array.from(new Set(data.map(post => post.email)));
+        setEmails(uniqueEmails);
+      })
+      .catch(error => console.error('Error fetching posts:', error));
+  };
+
+  // Handle search
+  useEffect(() => {
+    const filtered = posts.filter(post =>
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.body.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredPosts(filtered);
+    setCurrentPage(1); // Reset to first page when searching
+  }, [searchTerm, posts]);
+
+  // Pagination logic
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <>
-      {/* Sticky navigation bar at the top */}
       <Navbar />
-
-      {/* Main container with full screen width and gray background */}
       <div className="w-screen bg-gray-100 min-h-screen">
-        
-        {/* Responsive flex layout: column on mobile, row on large screens */}
         <div className="flex flex-col lg:flex-row px-6 gap-6 w-full">
           
-          {/* Left section: Posts list - takes 60% width on large screens */}
+          {/* Main Posts Section */}
           <div className="w-full lg:w-3/5 space-y-4 py-4">
-            <h2 className="text-2xl font-bold">📬 Latest Posts</h2>
-            
-            {/* Map through posts array and render each post */}
-            {posts.map(post => (
-              <div key={post.id} className="bg-white p-4 shadow rounded">
-                {/* Clickable post title that navigates to post detail page */}
-                <Link to={`/post/${post.id}`}>
-                  <h3 className="text-lg font-semibold text-blue-600 hover:underline">
-                    {post.title}
-                  </h3>
-                </Link>
-                
-                {/* Post body preview - truncated to 60 characters */}
-                <p className="text-gray-600">{post.body.slice(0, 60)}...</p>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">📬 Latest Posts</h2>
+              <button
+                onClick={() => navigate('/create-post')}
+                className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+              >
+                <span>➕</span>Create Post
+              </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative mb-4">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span>🔍</span>
               </div>
-            ))}
+              <input
+                type="text"
+                placeholder="Search posts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Posts List */}
+            {currentPosts.length === 0 ? (
+              <p className="text-gray-500">
+                {searchTerm ? `No posts found for "${searchTerm}"` : 'No posts available'}
+              </p>
+            ) : (
+              currentPosts.map(post => (
+                <div key={post._id} className="bg-white p-4 shadow rounded">
+                  <Link to={`/post/${post._id}`}>
+                    <h3 className="text-lg font-semibold text-blue-600 hover:underline">
+                      {post.title}
+                    </h3>
+                  </Link>
+                  <p className="text-gray-600">{post.body.slice(0, 60)}...</p>
+                  <p className="text-sm text-gray-400 mt-2">By: {post.email}</p>
+                </div>
+              ))
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-6">
+                <div className="flex space-x-2">
+                  {[...Array(totalPages)].map((_, index) => (
+                    <button
+                      key={index + 1}
+                      onClick={() => paginate(index + 1)}
+                      className={`px-3 py-2 rounded ${
+                        currentPage === index + 1
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Right section: Users list - takes 40% width on large screens */}
+          {/* Authors Sidebar */}
           <div className="w-full lg:w-2/5 space-y-2 py-4">
-            <h2 className="text-xl font-bold border-b pb-2 flex items-center gap-2">
-              <span role="img" aria-label="user">👤</span> Users
-            </h2>
-            
-            {/* Map through unique user IDs and create clickable user cards */}
-            {users.map(userId => {
-              // Try to find a sample post from this user in the displayed posts
-              let samplePost = posts.find(p => p.userId === userId);
-              
-              // Handle case where user has no posts in the first 20 displayed posts
-              if (!samplePost) {
-                // Calculate estimated post ID based on JSONPlaceholder pattern
-                // User 1: posts 1-10, User 2: posts 11-20, User 6: posts 51-60, etc.
-                const estimatedPostId = (userId - 1) * 10 + 1;
-                
-                return (
-                  <Link to={`/post/${estimatedPostId}`} key={userId}>
-                    <div className="bg-white p-3 rounded shadow hover:bg-gray-50 transition text-blue-600 hover:underline">
-                      User ID: <span className="font-semibold"> {userId}</span>
-                    </div>
-                  </Link>
-                );
-              }
-              
-              // If user has a post in the displayed posts, link to that post
+            <h2 className="text-xl font-bold border-b pb-2">📧 Authors</h2>
+            {emails.map(email => {
+              const samplePost = posts.find(p => p.email === email);
               return (
-                <Link to={`/post/${samplePost.id}`} key={userId}>
+                <Link to={`/post/${samplePost?._id}`} key={email}>
                   <div className="bg-white p-3 rounded shadow hover:bg-gray-50 transition text-blue-600 hover:underline">
-                    User ID: <span className="font-semibold"> {userId}</span>
+                    <span className="font-semibold">{email}</span>
                   </div>
                 </Link>
               );
