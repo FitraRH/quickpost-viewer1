@@ -3,6 +3,8 @@ import PostList from './pages/PostList';
 import PostDetail from './pages/PostDetail';
 import CreatePost from './pages/CreatePost';
 import EditPost from './pages/EditPost';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 function App() {
   return (
